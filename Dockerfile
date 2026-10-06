@@ -5,7 +5,7 @@ COPY . .
 RUN ./mvnw clean package -DskipTests
 
 # Etapa 2: Ejecución (Runtime)
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8106
