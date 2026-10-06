@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FutbolManager Pro - Sistema de Gestión de Clubes (Spring Boot & MongoDB)</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.6/dist/sweetalert2.min.css">
+    <style>
+        :root {
+            --primary-color: #0d5c3a;
+            --primary-hover: #083c25;
+            --accent-color: #10b981;
+            --accent-glow: rgba(16, 185, 129, 0.25);
+            --dark-bg: #0f172a;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f1f5f9;
+            color: var(--text-dark);
+            min-height: 100vh;
+        }
+
+        /* Top Navbar */
+        .navbar-custom {
+            background: linear-gradient(135deg, #092e1e 0%, #0d5c3a 50%, #064e3b 100%);
+            border-bottom: 2px solid #10b981;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .brand-title {
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: #ffffff;
+        }
+
+        .brand-badge {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border: 1px solid rgba(52, 211, 153, 0.3);
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 999px;
+            vertical-align: middle;
+        }
+
+        /* Stat KPI Cards */
+        .stat-card {
+            border: none;
+            border-radius: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+            position: relative;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        .stat-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+        }
+
+        /* Navigation Pills */
+        .nav-pills-custom {
+            background-color: #ffffff;
+            padding: 8px;
+            border-radius: 16px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+            border: 1px solid var(--border-color);
+        }
+
+        .nav-pills-custom .nav-link {
+            color: var(--text-muted);
+            font-weight: 600;
+            border-radius: 12px;
+            padding: 10px 22px;
+            transition: all 0.25s ease;
+        }
+
+        .nav-pills-custom .nav-link.active {
+            background: linear-gradient(135deg, #0d5c3a 0%, #10b981 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+
+        /* Content Cards & Tables */
+        .content-card {
+            border: none;
+            border-radius: 20px;
+            background: #ffffff;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+            border: 1px solid var(--border-color);
+        }
+
+        .table-custom {
+            margin-bottom: 0;
+            vertical-align: middle;
+        }
+
+        .table-custom thead th {
+            background-color: #f8fafc;
+            color: #475569;
+            font-weight: 700;
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 14px 18px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .table-custom tbody td {
+            padding: 16px 18px;
+            color: #1e293b;
+            font-size: 0.95rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .table-custom tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
+        /* Position Badges */
+        .badge-delantero {
+            background-color: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fca5a5;
+        }
+        .badge-centrocampista {
+            background-color: #e0e7ff;
+            color: #4338ca;
+            border: 1px solid #a5b4fc;
+        }
+        .badge-defensa {
+            background-color: #fef3c7;
+            color: #d97706;
+            border: 1px solid #fde68a;
+        }
+        .badge-portero {
+            background-color: #ede9fe;
+            color: #7c3aed;
+            border: 1px solid #ddd6fe;
+        }
+
+        .dorsal-circle {
+            display: inline-flex;
+            width: 32px;
+            height: 32px;
+            background: #1e293b;
+            color: #ffffff;
+            font-weight: 700;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+        }
+
+        .club-tag {
+            background: #f1f5f9;
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #334155;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Modals */
+        .modal-content {
+            border-radius: 20px;
+            border: none;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #092e1e 0%, #0d5c3a 100%);
+            color: #ffffff;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            padding: 20px 24px;
+        }
+
+        .btn-success-custom {
+            background: linear-gradient(135deg, #0d5c3a 0%, #10b981 100%);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 9px 20px;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-success-custom:hover {
+            box-shadow: 0 4px 14px var(--accent-glow);
+            color: white;
+            opacity: 0.95;
+        }
+
+        .action-btn {
+            width: 34px;
+            height: 34px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.08);
+        }
+
+        /* Banner info slides reference */
+        .slide-alert {
+            background: linear-gradient(to right, #ecfdf5, #f0fdf4);
+            border-left: 4px solid #10b981;
+            border-radius: 12px;
+            padding: 14px 18px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header / Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-custom py-3">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+                <span class="fs-3">⚽</span>
+                <div>
+                    <span class="brand-title fs-4">FutbolManager Pro</span>
+                    <span class="brand-badge ms-2"><i class="bi bi-hdd-network-fill me-1"></i>MongoDB Atlas Activo</span>
+                </div>
+            </a>
+            <div class="d-flex align-items-center gap-3">
+                <span class="text-white-50 small d-none d-md-inline">
+                    <i class="bi bi-layers-fill text-emerald me-1"></i> Spring Data MongoDB + JPA Starter
+                </span>
+                <button class="btn btn-outline-light btn-sm rounded-pill px-3" onclick="recargarTodosLosDatos()">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Sincronizar
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container-fluid px-4 py-4">
+
+        <!-- Info alert matching the presentation slide -->
+        <div class="slide-alert mb-4 shadow-sm d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div>
+                <strong class="text-dark"><i class="bi bi-journal-code me-2 text-success"></i>Arquitectura de Datos (Diapositiva Spring/MONGO):</strong>
+                <span class="text-muted ms-1">
+                    Colecciones separadas sin tabla intermedia: <code>@Document(collection = "clubes")</code> con relaciones <code>@DocumentReference</code> a <code>Entrenador</code> (1 a 1) y <code>Jugador</code> (1 a Muchos).
+                </span>
+            </div>
+            <div>
+                <span class="badge bg-dark text-white px-3 py-2 rounded-pill font-monospace">API REST: /api/clubes | /api/entrenadores | /api/jugadores</span>
+            </div>
+        </div>
+
+        <!-- KPI Summary Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="card stat-card p-3 bg-white">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon bg-success-subtle text-success">
+                            <i class="bi bi-shield-shaded"></i>
+                        </div>
+                        <div>
+                            <span class="text-muted small fw-medium">Clubes Registrados</span>
+                            <h3 class="fw-bold mb-0" id="kpi-total-clubes">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="card stat-card p-3 bg-white">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon bg-primary-subtle text-primary">
+                            <i class="bi bi-person-badge-fill"></i>
+                        </div>
+                        <div>
+                            <span class="text-muted small fw-medium">Entrenadores (DT)</span>
+                            <h3 class="fw-bold mb-0" id="kpi-total-entrenadores">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="card stat-card p-3 bg-white">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon bg-warning-subtle text-warning">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                        <div>
+                            <span class="text-muted small fw-medium">Jugadores Totales</span>
+                            <h3 class="fw-bold mb-0" id="kpi-total-jugadores">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="card stat-card p-3 bg-white">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon bg-info-subtle text-info">
+                            <i class="bi bi-trophy-fill"></i>
+                        </div>
+                        <div>
+                            <span class="text-muted small fw-medium">Base de Datos</span>
+                            <h5 class="fw-bold mb-0 text-truncate" style="max-width: 170px;" title="futbol_db @ MongoDB Atlas">futbol_db Atlas</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs: Separate Tables for Each Entity as requested -->
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+            <ul class="nav nav-pills nav-pills-custom" id="entidadesTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="clubes-tab" data-bs-toggle="pill" data-bs-target="#tab-clubes" type="button" role="tab">
+                        <i class="bi bi-shield-fill me-1"></i> 1. Clubes Deportivos
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="entrenadores-tab" data-bs-toggle="pill" data-bs-target="#tab-entrenadores" type="button" role="tab">
+                        <i class="bi bi-person-badge me-1"></i> 2. Entrenadores
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="jugadores-tab" data-bs-toggle="pill" data-bs-target="#tab-jugadores" type="button" role="tab">
+                        <i class="bi bi-people me-1"></i> 3. Jugadores
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="plantel-tab" data-bs-toggle="pill" data-bs-target="#tab-plantel" type="button" role="tab">
+                        <i class="bi bi-clipboard2-pulse me-1"></i> 4. Vista de Plantel / Relaciones
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Dynamic New Button depending on active tab -->
+            <div id="tab-action-buttons">
+                <button class="btn btn-success-custom" onclick="abrirModalCrearClub()">
+                    <i class="bi bi-plus-circle me-1"></i> Nuevo Club
+                </button>
+            </div>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="entidadesTabContent">
+
+            <!-- TAB 1: TABLA DE CLUBES -->
+            <div class="tab-pane fade show active" id="tab-clubes" role="tabpanel">
+                <div class="card content-card">
+                    <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-shield-shaded text-success me-2"></i>Gestión de Clubes</h5>
+                            <small class="text-muted">Colección <code>clubes</code> con referencias de entrenador y jugadores</small>
+                        </div>
+                        <span class="badge bg-light text-dark border px-3 py-2" id="badge-count-clubes">0 clubes</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-custom">
+                                <thead>
+                                    <tr>
+                                        <th>Club</th>
+                                        <th>Ciudad / País</th>
+                                        <th>Estadio</th>
+                                        <th>Fundación</th>
+                                        <th>Director Técnico</th>
+                                        <th>Plantilla</th>
+                                        <th class="text-end pe-4">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-clubes">
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4 text-muted">
+                                            <div class="spinner-border spinner-border-sm text-success me-2"></div>Cargando clubes desde MongoDB Atlas...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: TABLA DE ENTRENADORES -->
+            <div class="tab-pane fade" id="tab-entrenadores" role="tabpanel">
+                <div class="card content-card">
+                    <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-person-badge-fill text-primary me-2"></i>Gestión de Entrenadores</h5>
+                            <small class="text-muted">Colección <code>entrenadores</code> (Relación 1 a 1 con Clubes)</small>
+                        </div>
+                        <button class="btn btn-outline-primary btn-sm rounded-pill px-3" onclick="abrirModalCrearEntrenador()">
+                            <i class="bi bi-plus-lg me-1"></i> Agregar Entrenador
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-custom">
+                                <thead>
+                                    <tr>
+                                        <th>Entrenador</th>
+                                        <th>Edad</th>
+                                        <th>Nacionalidad</th>
+                                        <th>Experiencia</th>
+                                        <th>Club Actual</th>
+                                        <th class="text-end pe-4">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-entrenadores">
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4 text-muted">Cargando entrenadores...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: TABLA DE JUGADORES -->
+            <div class="tab-pane fade" id="tab-jugadores" role="tabpanel">
+                <div class="card content-card">
+                    <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-people-fill text-warning me-2"></i>Gestión de Jugadores</h5>
+                            <small class="text-muted">Colección <code>jugadores</code> (Relación 1 a Muchos)</small>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <select class="form-select form-select-sm" id="filtro-posicion" onchange="renderizarJugadores()" style="min-width: 140px;">
+                                <option value="">Todas las posiciones</option>
+                                <option value="Delantero">Delantero</option>
+                                <option value="Centrocampista">Centrocampista</option>
+                                <option value="Defensa">Defensa</option>
+                                <option value="Portero">Portero</option>
+                            </select>
+                            <button class="btn btn-outline-warning btn-sm rounded-pill px-3 text-dark" onclick="abrirModalCrearJugador()">
+                                <i class="bi bi-plus-lg me-1"></i> Agregar Jugador
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-custom">
+                                <thead>
+                                    <tr>
+                                        <th>Dorsal</th>
+                                        <th>Nombre Completo</th>
+                                        <th>Posición</th>
+                                        <th>Edad</th>
+                                        <th>Nacionalidad</th>
+                                        <th>Club Perteneciente</th>
+                                        <th class="text-end pe-4">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-jugadores">
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4 text-muted">Cargando jugadores...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: VISTA DE PLANTEL / RELACIONES -->
+            <div class="tab-pane fade" id="tab-plantel" role="tabpanel">
+                <div class="row g-4">
+                    <div class="col-lg-4">
+                        <div class="card content-card p-3">
+                            <h6 class="fw-bold mb-3"><i class="bi bi-search me-2 text-success"></i>Seleccionar Club</h6>
+                            <select class="form-select mb-3" id="select-club-plantel" onchange="mostrarPlantelSeleccionado()">
+                                <option value="">-- Elige un Club --</option>
+                            </select>
+                            <div id="club-plantel-info" class="p-3 bg-light rounded-3 text-muted small">
+                                Selecciona un club para ver la relación en vivo con su Director Técnico y todos sus Jugadores vinculados en MongoDB.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-8">
+                        <div class="card content-card">
+                            <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center">
+                                <h6 class="fw-bold mb-0 text-dark" id="titulo-plantel-seleccionado"><i class="bi bi-list-check me-2 text-primary"></i>Plantel de Jugadores</h6>
+                                <button class="btn btn-sm btn-outline-success rounded-pill px-3" id="btn-vincular-jugador" onclick="abrirModalVincularJugador()" style="display: none;">
+                                    <i class="bi bi-person-plus-fill me-1"></i> Vincular Jugador al Club
+                                </button>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-custom">
+                                        <thead>
+                                            <tr>
+                                                <th>Dorsal</th>
+                                                <th>Jugador</th>
+                                                <th>Posición</th>
+                                                <th>Nacionalidad</th>
+                                                <th class="text-end pe-4">Desvincular</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tbody-plantel">
+                                            <tr>
+                                                <td colspan="5" class="text-center py-4 text-muted">Selecciona un club en el panel izquierdo</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- MODALES DE OPERACIONES CRUD -->
+    <!-- ============================================================== -->
+
+    <!-- Modal Club (Crear / Editar) -->
+    <div class="modal fade" id="modalClub" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="modalClubTitulo"><i class="bi bi-shield-plus me-2"></i>Nuevo Club</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="formClub" onsubmit="guardarClub(event)">
+                        <input type="hidden" id="clubId">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Nombre del Club *</label>
+                            <input type="text" class="form-control" id="clubNombre" placeholder="Ej: Real Madrid CF" required>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Ciudad *</label>
+                                <input type="text" class="form-control" id="clubCiudad" placeholder="Ej: Madrid" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">País</label>
+                                <input type="text" class="form-control" id="clubPais" placeholder="Ej: España">
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-8">
+                                <label class="form-label fw-semibold">Estadio</label>
+                                <input type="text" class="form-control" id="clubEstadio" placeholder="Ej: Santiago Bernabéu">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Fundación</label>
+                                <input type="number" class="form-control" id="clubAnio" min="1800" max="2099" placeholder="1902">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Director Técnico (@OneToOne)</label>
+                            <select class="form-select" id="clubEntrenadorSelect">
+                                <option value="">-- Sin Entrenador Asignado --</option>
+                            </select>
+                            <div class="form-text">Puedes asignarle un entrenador registrado en la base de datos.</div>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-success-custom">Guardar Club</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Entrenador (Crear / Editar) -->
+    <div class="modal fade" id="modalEntrenador" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary">
+                    <h5 class="modal-title fw-bold text-white" id="modalEntrenadorTitulo"><i class="bi bi-person-badge me-2"></i>Nuevo Entrenador</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="formEntrenador" onsubmit="guardarEntrenador(event)">
+                        <input type="hidden" id="entrenadorId">
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Nombre *</label>
+                                <input type="text" class="form-control" id="entrenadorNombre" placeholder="Ej: Carlo" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Apellido *</label>
+                                <input type="text" class="form-control" id="entrenadorApellido" placeholder="Ej: Ancelotti" required>
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Edad *</label>
+                                <input type="number" class="form-control" id="entrenadorEdad" min="18" max="99" placeholder="65" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Años de Exp.</label>
+                                <input type="number" class="form-control" id="entrenadorExperiencia" min="0" max="60" placeholder="25">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Nacionalidad *</label>
+                            <input type="text" class="form-control" id="entrenadorNacionalidad" placeholder="Ej: Italiano" required>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary px-4">Guardar Entrenador</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Jugador (Crear / Editar) -->
+    <div class="modal fade" id="modalJugador" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title fw-bold text-dark" id="modalJugadorTitulo"><i class="bi bi-person-fill me-2"></i>Nuevo Jugador</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="formJugador" onsubmit="guardarJugador(event)">
+                        <input type="hidden" id="jugadorId">
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Nombre *</label>
+                                <input type="text" class="form-control" id="jugadorNombre" placeholder="Ej: Vinícius" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Apellido *</label>
+                                <input type="text" class="form-control" id="jugadorApellido" placeholder="Ej: Júnior" required>
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Dorsal *</label>
+                                <input type="number" class="form-control" id="jugadorNumero" min="1" max="99" placeholder="7" required>
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label fw-semibold">Posición *</label>
+                                <select class="form-select" id="jugadorPosicion" required>
+                                    <option value="">Seleccione posición</option>
+                                    <option value="Delantero">Delantero</option>
+                                    <option value="Centrocampista">Centrocampista</option>
+                                    <option value="Defensa">Defensa</option>
+                                    <option value="Portero">Portero</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Edad</label>
+                                <input type="number" class="form-control" id="jugadorEdad" min="15" max="50" placeholder="24">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Nacionalidad</label>
+                                <input type="text" class="form-control" id="jugadorNacionalidad" placeholder="Ej: Brasileño">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Club de Pertenencia (id_club)</label>
+                            <select class="form-select" id="jugadorClubSelect">
+                                <option value="">-- Agente Libre (Sin Club) --</option>
+                            </select>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-warning px-4 text-dark fw-bold">Guardar Jugador</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Vincular Jugador a Club existente -->
+    <div class="modal fade" id="modalVincularJugador" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-person-plus-fill me-2"></i>Vincular Jugador al Club</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Seleccionar Jugador Disponible:</label>
+                        <select class="form-select" id="select-jugador-disponible">
+                            <option value="">-- Seleccionar --</option>
+                        </select>
+                        <div class="form-text">Puedes transferir o agregar un jugador a este plantel.</div>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-success" onclick="confirmarVincularJugador()">Vincular</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle & SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.6/dist/sweetalert2.all.min.js"></script>
+
+    <!-- Client-side Logic (Calling the REST API) -->
+    <script>
+        let listaClubes = [];
+        let listaEntrenadores = [];
+        let listaJugadores = [];
+
+        // Modales Bootstrap
+        let modalClubObj, modalEntrenadorObj, modalJugadorObj, modalVincularObj;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            modalClubObj = new bootstrap.Modal(document.getElementById('modalClub'));
+            modalEntrenadorObj = new bootstrap.Modal(document.getElementById('modalEntrenador'));
+            modalJugadorObj = new bootstrap.Modal(document.getElementById('modalJugador'));
+            modalVincularObj = new bootstrap.Modal(document.getElementById('modalVincularJugador'));
+
+            // Manejo del botón dinámico según la pestaña activa
+            document.querySelectorAll('#entidadesTab button').forEach(tab => {
+                tab.addEventListener('shown.bs.tab', (event) => {
+                    const targetId = event.target.getAttribute('data-bs-target');
+                    const btnContainer = document.getElementById('tab-action-buttons');
+                    if (targetId === '#tab-clubes') {
+                        btnContainer.innerHTML = `<button class="btn btn-success-custom" onclick="abrirModalCrearClub()"><i class="bi bi-plus-circle me-1"></i> Nuevo Club</button>`;
+                    } else if (targetId === '#tab-entrenadores') {
+                        btnContainer.innerHTML = `<button class="btn btn-primary rounded-pill px-3" onclick="abrirModalCrearEntrenador()"><i class="bi bi-plus-circle me-1"></i> Nuevo Entrenador</button>`;
+                    } else if (targetId === '#tab-jugadores') {
+                        btnContainer.innerHTML = `<button class="btn btn-warning rounded-pill px-3 text-dark fw-bold" onclick="abrirModalCrearJugador()"><i class="bi bi-plus-circle me-1"></i> Nuevo Jugador</button>`;
+                    } else {
+                        btnContainer.innerHTML = '';
+                    }
+                });
+            });
+
+            recargarTodosLosDatos();
+        });
+
+        // ==========================================
+        // CARGA GENERAL DE DATOS MEDIANTE API REST
+        // ==========================================
+        async function recargarTodosLosDatos() {
+            try {
+                const [respClubes, respEntrenadores, respJugadores] = await Promise.all([
+                    fetch('/api/clubes'),
+                    fetch('/api/entrenadores'),
+                    fetch('/api/jugadores')
+                ]);
+
+                listaClubes = await respClubes.json();
+                listaEntrenadores = await respEntrenadores.json();
+                listaJugadores = await respJugadores.json();
+
+                actualizarKPIs();
+                renderizarClubes();
+                renderizarEntrenadores();
+                renderizarJugadores();
+                actualizarSelectores();
+                mostrarPlantelSeleccionado();
+            } catch (err) {
+                console.error("Error al cargar datos:", err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de Conexión',
+                    text: 'No se pudieron sincronizar los datos con la API REST de MongoDB: ' + err.message
+                });
+            }
+        }
+
+        function actualizarKPIs() {
+            document.getElementById('kpi-total-clubes').textContent = listaClubes.length;
+            document.getElementById('kpi-total-entrenadores').textContent = listaEntrenadores.length;
+            document.getElementById('kpi-total-jugadores').textContent = listaJugadores.length;
+            document.getElementById('badge-count-clubes').textContent = `${listaClubes.length} clubes`;
+        }
+
+        function actualizarSelectores() {
+            // Selector de Entrenador en Modal Club
+            const selEntrenador = document.getElementById('clubEntrenadorSelect');
+            selEntrenador.innerHTML = '<option value="">-- Sin Entrenador Asignado --</option>';
+            listaEntrenadores.forEach(e => {
+                selEntrenador.innerHTML += `<option value="${e.id}">${e.nombre} ${e.apellido} (${e.nacionalidad})</option>`;
+            });
+
+            // Selector de Club en Modal Jugador
+            const selClubJugador = document.getElementById('jugadorClubSelect');
+            selClubJugador.innerHTML = '<option value="">-- Agente Libre (Sin Club) --</option>';
+            listaClubes.forEach(c => {
+                selClubJugador.innerHTML += `<option value="${c.id}">${c.nombre} (${c.ciudad})</option>`;
+            });
+
+            // Selector de Club en Pestaña Plantel
+            const selClubPlantel = document.getElementById('select-club-plantel');
+            const valorActual = selClubPlantel.value;
+            selClubPlantel.innerHTML = '<option value="">-- Elige un Club --</option>';
+            listaClubes.forEach(c => {
+                selClubPlantel.innerHTML += `<option value="${c.id}" ${c.id === valorActual ? 'selected' : ''}>${c.nombre}</option>`;
+            });
+        }
+
+        // ==========================================
+        // RENDERIZADO: CLUBES (CRUD)
+        // ==========================================
+        function renderizarClubes() {
+            const tbody = document.getElementById('tbody-clubes');
+            if (listaClubes.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">No hay clubes registrados. Crea uno con el botón superior.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = listaClubes.map(club => {
+                const dt = club.entrenador 
+                    ? `<span class="fw-semibold text-dark"><i class="bi bi-person-check-fill text-success me-1"></i>${club.entrenador.nombre} ${club.entrenador.apellido}</span>`
+                    : `<span class="badge bg-secondary-subtle text-secondary">Sin DT</span>`;
+
+                const cantJugadores = club.jugadores ? club.jugadores.length : 0;
+
+                return `
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="fs-5">🛡️</span>
+                                <div>
+                                    <div class="fw-bold text-dark">${club.nombre}</div>
+                                    <small class="text-muted font-monospace">${club.id || ''}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>${club.ciudad || ''}${club.pais ? ', ' + club.pais : ''}</td>
+                        <td><i class="bi bi-geo-alt me-1 text-muted"></i>${club.estadio || 'N/D'}</td>
+                        <td>${club.anioFundacion || 'N/D'}</td>
+                        <td>${dt}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-success rounded-pill px-2 py-1" onclick="verPlantelDeClub('${club.id}')">
+                                <i class="bi bi-people-fill me-1"></i>${cantJugadores} jugadores
+                            </button>
+                        </td>
+                        <td class="text-end pe-4">
+                            <button class="btn btn-outline-primary action-btn me-1" title="Editar Club" onclick="abrirModalEditarClub('${club.id}')">
+                                <i class="bi bi-pencil-fill"></i>
+                            </button>
+                            <button class="btn btn-outline-danger action-btn" title="Eliminar Club" onclick="eliminarClub('${club.id}', '${club.nombre}')">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function abrirModalCrearClub() {
+            document.getElementById('modalClubTitulo').innerHTML = '<i class="bi bi-shield-plus me-2"></i>Nuevo Club';
+            document.getElementById('formClub').reset();
+            document.getElementById('clubId').value = '';
+            actualizarSelectores();
+            modalClubObj.show();
+        }
+
+        function abrirModalEditarClub(id) {
+            const club = listaClubes.find(c => c.id === id);
+            if (!club) return;
+
+            document.getElementById('modalClubTitulo').innerHTML = '<i class="bi bi-pencil-square me-2"></i>Editar Club';
+            document.getElementById('clubId').value = club.id;
+            document.getElementById('clubNombre').value = club.nombre || '';
+            document.getElementById('clubCiudad').value = club.ciudad || '';
+            document.getElementById('clubPais').value = club.pais || '';
+            document.getElementById('clubEstadio').value = club.estadio || '';
+            document.getElementById('clubAnio').value = club.anioFundacion || '';
+
+            actualizarSelectores();
+            if (club.entrenador && club.entrenador.id) {
+                document.getElementById('clubEntrenadorSelect').value = club.entrenador.id;
+            } else {
+                document.getElementById('clubEntrenadorSelect').value = '';
+            }
+
+            modalClubObj.show();
+        }
+
+        async function guardarClub(e) {
+            e.preventDefault();
+            const id = document.getElementById('clubId').value;
+            const payload = {
+                nombre: document.getElementById('clubNombre').value.trim(),
+                ciudad: document.getElementById('clubCiudad').value.trim(),
+                pais: document.getElementById('clubPais').value.trim(),
+                estadio: document.getElementById('clubEstadio').value.trim(),
+                anioFundacion: parseInt(document.getElementById('clubAnio').value) || 1900,
+                entrenadorId: document.getElementById('clubEntrenadorSelect').value || null
+            };
+
+            const url = id ? `/api/clubes/${id}` : '/api/clubes';
+            const method = id ? 'PUT' : 'POST';
+
+            try {
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.error || 'Error al guardar el club');
+                }
+
+                modalClubObj.hide();
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Operación Exitosa!',
+                    text: id ? 'Club actualizado correctamente' : 'Nuevo club creado en MongoDB',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                await recargarTodosLosDatos();
+            } catch (err) {
+                Swal.fire('Error', err.message, 'error');
+            }
+        }
+
+        async function eliminarClub(id, nombre) {
+            const confirm = await Swal.fire({
+                title: `¿Eliminar "${nombre}"?`,
+                text: 'Esta acción removerá el club de MongoDB Atlas. Los jugadores quedarán como agentes libres.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Sí, eliminar club',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (confirm.isConfirmed) {
+                try {
+                    const res = await fetch(`/api/clubes/${id}`, { method: 'DELETE' });
+                    if (!res.ok) throw new Error('No se pudo eliminar el club');
+                    Swal.fire('Eliminado', 'El club ha sido eliminado de MongoDB', 'success');
+                    await recargarTodosLosDatos();
+                } catch (err) {
+                    Swal.fire('Error', err.message, 'error');
+                }
+            }
+        }
+
+        // ==========================================
+        // RENDERIZADO: ENTRENADORES (CRUD)
+        // ==========================================
+        function renderizarEntrenadores() {
+            const tbody = document.getElementById('tbody-entrenadores');
+            if (listaEntrenadores.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">No hay entrenadores registrados.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = listaEntrenadores.map(e => {
+                // Buscar si tiene club asignado
+                const clubAsignado = listaClubes.find(c => c.entrenador && c.entrenador.id === e.id);
+                const badgeClub = clubAsignado 
+                    ? `<span class="club-tag"><i class="bi bi-shield-fill text-success"></i>${clubAsignado.nombre}</span>`
+                    : `<span class="badge bg-secondary-subtle text-secondary">Disponible / Sin Club</span>`;
+
+                return `
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="bg-primary-subtle text-primary rounded-circle p-2">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold">${e.nombre} ${e.apellido}</div>
+                                    <small class="text-muted font-monospace">${e.id || ''}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>${e.edad} años</td>
+                        <td><span class="badge bg-light text-dark border">${e.nacionalidad}</span></td>
+                        <td>${e.aniosExperiencia || 0} años</td>
+                        <td>${badgeClub}</td>
+                        <td class="text-end pe-4">
+                            <button class="btn btn-outline-primary action-btn me-1" title="Editar" onclick="abrirModalEditarEntrenador('${e.id}')">
+                                <i class="bi bi-pencil-fill"></i>
+                            </button>
+                            <button class="btn btn-outline-danger action-btn" title="Eliminar" onclick="eliminarEntrenador('${e.id}', '${e.nombre} ${e.apellido}')">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function abrirModalCrearEntrenador() {
+            document.getElementById('modalEntrenadorTitulo').innerHTML = '<i class="bi bi-person-badge me-2"></i>Nuevo Entrenador';
+            document.getElementById('formEntrenador').reset();
+            document.getElementById('entrenadorId').value = '';
+            modalEntrenadorObj.show();
+        }
+
+        function abrirModalEditarEntrenador(id) {
+            const e = listaEntrenadores.find(ent => ent.id === id);
+            if (!e) return;
+
+            document.getElementById('modalEntrenadorTitulo').innerHTML = '<i class="bi bi-pencil-square me-2"></i>Editar Entrenador';
+            document.getElementById('entrenadorId').value = e.id;
+            document.getElementById('entrenadorNombre').value = e.nombre || '';
+            document.getElementById('entrenadorApellido').value = e.apellido || '';
+            document.getElementById('entrenadorEdad').value = e.edad || '';
+            document.getElementById('entrenadorNacionalidad').value = e.nacionalidad || '';
+            document.getElementById('entrenadorExperiencia').value = e.aniosExperiencia || '';
+
+            modalEntrenadorObj.show();
+        }
+
+        async function guardarEntrenador(e) {
+            e.preventDefault();
+            const id = document.getElementById('entrenadorId').value;
+            const payload = {
+                nombre: document.getElementById('entrenadorNombre').value.trim(),
+                apellido: document.getElementById('entrenadorApellido').value.trim(),
+                edad: parseInt(document.getElementById('entrenadorEdad').value),
+                nacionalidad: document.getElementById('entrenadorNacionalidad').value.trim(),
+                aniosExperiencia: parseInt(document.getElementById('entrenadorExperiencia').value) || 0
+            };
+
+            const url = id ? `/api/entrenadores/${id}` : '/api/entrenadores';
+            const method = id ? 'PUT' : 'POST';
+
+            try {
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.error || 'Error al guardar el entrenador');
+                }
+
+                modalEntrenadorObj.hide();
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Éxito!',
+                    text: id ? 'Entrenador actualizado' : 'Entrenador registrado en MongoDB',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                await recargarTodosLosDatos();
+            } catch (err) {
+                Swal.fire('Error', err.message, 'error');
+            }
+        }
+
+        async function eliminarEntrenador(id, nombre) {
+            const confirm = await Swal.fire({
+                title: `¿Eliminar DT ${nombre}?`,
+                text: 'Si está vinculado a un club, quedará desvinculado automáticamente.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (confirm.isConfirmed) {
+                try {
+                    const res = await fetch(`/api/entrenadores/${id}`, { method: 'DELETE' });
+                    if (!res.ok) throw new Error('No se pudo eliminar el entrenador');
+                    Swal.fire('Eliminado', 'Entrenador eliminado de MongoDB', 'success');
+                    await recargarTodosLosDatos();
+                } catch (err) {
+                    Swal.fire('Error', err.message, 'error');
+                }
+            }
+        }
+
+        // ==========================================
+        // RENDERIZADO: JUGADORES (CRUD)
+        // ==========================================
+        function getBadgePosicion(posicion) {
+            if (!posicion) return '<span class="badge bg-secondary">N/D</span>';
+            const pos = posicion.toLowerCase();
+            if (pos.includes('delantero')) return `<span class="badge badge-delantero px-2 py-1"><i class="bi bi-lightning-fill me-1"></i>${posicion}</span>`;
+            if (pos.includes('centro') || pos.includes('medio')) return `<span class="badge badge-centrocampista px-2 py-1"><i class="bi bi-disc-fill me-1"></i>${posicion}</span>`;
+            if (pos.includes('defensa')) return `<span class="badge badge-defensa px-2 py-1"><i class="bi bi-shield-fill me-1"></i>${posicion}</span>`;
+            if (pos.includes('portero') || pos.includes('arquero')) return `<span class="badge badge-portero px-2 py-1"><i class="bi bi-hand-index-thumb-fill me-1"></i>${posicion}</span>`;
+            return `<span class="badge bg-light text-dark border">${posicion}</span>`;
+        }
+
+        function renderizarJugadores() {
+            const tbody = document.getElementById('tbody-jugadores');
+            const filtroPos = document.getElementById('filtro-posicion').value;
+
+            let jugadores = [...listaJugadores];
+            if (filtroPos) {
+                jugadores = jugadores.filter(j => j.posicion && j.posicion.toLowerCase() === filtroPos.toLowerCase());
+            }
+
+            if (jugadores.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">No se encontraron jugadores para mostrar.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = jugadores.map(j => {
+                const badgeClub = j.nombreClub 
+                    ? `<span class="club-tag"><i class="bi bi-shield-fill text-success"></i>${j.nombreClub}</span>`
+                    : (j.idClub ? `<span class="club-tag">${j.idClub}</span>` : `<span class="badge bg-secondary-subtle text-secondary">Libre</span>`);
+
+                return `
+                    <tr>
+                        <td><span class="dorsal-circle">${j.numero || '-'}</span></td>
+                        <td>
+                            <div class="fw-bold">${j.nombre} ${j.apellido}</div>
+                            <small class="text-muted font-monospace">${j.id || ''}</small>
+                        </td>
+                        <td>${getBadgePosicion(j.posicion)}</td>
+                        <td>${j.edad ? j.edad + ' años' : 'N/D'}</td>
+                        <td><span class="badge bg-light text-dark border">${j.nacionalidad || 'N/D'}</span></td>
+                        <td>${badgeClub}</td>
+                        <td class="text-end pe-4">
+                            <button class="btn btn-outline-primary action-btn me-1" title="Editar" onclick="abrirModalEditarJugador('${j.id}')">
+                                <i class="bi bi-pencil-fill"></i>
+                            </button>
+                            <button class="btn btn-outline-danger action-btn" title="Eliminar" onclick="eliminarJugador('${j.id}', '${j.nombre} ${j.apellido}')">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function abrirModalCrearJugador() {
+            document.getElementById('modalJugadorTitulo').innerHTML = '<i class="bi bi-person-fill me-2"></i>Nuevo Jugador';
+            document.getElementById('formJugador').reset();
+            document.getElementById('jugadorId').value = '';
+            actualizarSelectores();
+            modalJugadorObj.show();
+        }
+
+        function abrirModalEditarJugador(id) {
+            const j = listaJugadores.find(jug => jug.id === id);
+            if (!j) return;
+
+            document.getElementById('modalJugadorTitulo').innerHTML = '<i class="bi bi-pencil-square me-2"></i>Editar Jugador';
+            document.getElementById('jugadorId').value = j.id;
+            document.getElementById('jugadorNombre').value = j.nombre || '';
+            document.getElementById('jugadorApellido').value = j.apellido || '';
+            document.getElementById('jugadorNumero').value = j.numero || '';
+            document.getElementById('jugadorPosicion').value = j.posicion || '';
+            document.getElementById('jugadorEdad').value = j.edad || '';
+            document.getElementById('jugadorNacionalidad').value = j.nacionalidad || '';
+
+            actualizarSelectores();
+            document.getElementById('jugadorClubSelect').value = j.idClub || '';
+
+            modalJugadorObj.show();
+        }
+
+        async function guardarJugador(e) {
+            e.preventDefault();
+            const id = document.getElementById('jugadorId').value;
+            const clubIdVal = document.getElementById('jugadorClubSelect').value;
+
+            const payload = {
+                nombre: document.getElementById('jugadorNombre').value.trim(),
+                apellido: document.getElementById('jugadorApellido').value.trim(),
+                numero: parseInt(document.getElementById('jugadorNumero').value),
+                posicion: document.getElementById('jugadorPosicion').value,
+                edad: parseInt(document.getElementById('jugadorEdad').value) || 20,
+                nacionalidad: document.getElementById('jugadorNacionalidad').value.trim(),
+                idClub: clubIdVal || null
+            };
+
+            const url = id ? `/api/jugadores/${id}` : '/api/jugadores';
+            const method = id ? 'PUT' : 'POST';
+
+            try {
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.error || 'Error al guardar el jugador');
+                }
+
+                modalJugadorObj.hide();
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Éxito!',
+                    text: id ? 'Jugador actualizado' : 'Jugador registrado en MongoDB',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                await recargarTodosLosDatos();
+            } catch (err) {
+                Swal.fire('Error', err.message, 'error');
+            }
+        }
+
+        async function eliminarJugador(id, nombre) {
+            const confirm = await Swal.fire({
+                title: `¿Eliminar a ${nombre}?`,
+                text: 'Se removerá de la colección y de la plantilla de su club.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (confirm.isConfirmed) {
+                try {
+                    const res = await fetch(`/api/jugadores/${id}`, { method: 'DELETE' });
+                    if (!res.ok) throw new Error('No se pudo eliminar el jugador');
+                    Swal.fire('Eliminado', 'Jugador eliminado de MongoDB', 'success');
+                    await recargarTodosLosDatos();
+                } catch (err) {
+                    Swal.fire('Error', err.message, 'error');
+                }
+            }
+        }
+
+        // ==========================================
+        // VISTA DE PLANTEL & RELACIONES (TAB 4)
+        // ==========================================
+        function verPlantelDeClub(clubId) {
+            const triggerEl = document.querySelector('#plantel-tab');
+            const tab = bootstrap.Tab.getInstance(triggerEl) || new bootstrap.Tab(triggerEl);
+            tab.show();
+
+            const sel = document.getElementById('select-club-plantel');
+            sel.value = clubId;
+            mostrarPlantelSeleccionado();
+        }
+
+        function mostrarPlantelSeleccionado() {
+            const clubId = document.getElementById('select-club-plantel').value;
+            const infoDiv = document.getElementById('club-plantel-info');
+            const tbody = document.getElementById('tbody-plantel');
+            const btnVincular = document.getElementById('btn-vincular-jugador');
+            const titulo = document.getElementById('titulo-plantel-seleccionado');
+
+            if (!clubId) {
+                infoDiv.innerHTML = 'Selecciona un club para ver la relación en vivo con su Director Técnico y todos sus Jugadores vinculados en MongoDB.';
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">Selecciona un club en el panel izquierdo</td></tr>`;
+                btnVincular.style.display = 'none';
+                titulo.innerHTML = '<i class="bi bi-list-check me-2 text-primary"></i>Plantel de Jugadores';
+                return;
+            }
+
+            const club = listaClubes.find(c => c.id === clubId);
+            if (!club) return;
+
+            btnVincular.style.display = 'inline-block';
+            titulo.innerHTML = `<i class="bi bi-shield-shaded me-2 text-success"></i>Plantel de: <span class="text-success">${club.nombre}</span>`;
+
+            const dtInfo = club.entrenador 
+                ? `<strong>${club.entrenador.nombre} ${club.entrenador.apellido}</strong> (${club.entrenador.nacionalidad}, ${club.entrenador.edad} años)`
+                : '<span class="text-danger fw-semibold">Sin DT Asignado</span>';
+
+            infoDiv.innerHTML = `
+                <h6 class="fw-bold text-dark mb-2">${club.nombre}</h6>
+                <div class="mb-1"><i class="bi bi-geo-alt text-muted me-1"></i>${club.ciudad || ''} (${club.pais || ''})</div>
+                <div class="mb-1"><i class="bi bi-building text-muted me-1"></i>${club.estadio || 'N/D'}</div>
+                <div class="mb-2"><i class="bi bi-calendar text-muted me-1"></i>Fundado en ${club.anioFundacion || 'N/D'}</div>
+                <hr class="my-2">
+                <div class="mb-1"><i class="bi bi-person-badge text-primary me-1"></i><strong>Director Técnico:</strong></div>
+                <div class="ps-3">${dtInfo}</div>
+            `;
+
+            // Filtrar jugadores pertenecientes a este club
+            const jugadoresDelClub = listaJugadores.filter(j => j.idClub === club.id);
+
+            if (jugadoresDelClub.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">Este club aún no tiene jugadores vinculados. Puedes usar el botón "Vincular Jugador".</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = jugadoresDelClub.map(j => `
+                <tr>
+                    <td><span class="dorsal-circle">${j.numero || '-'}</span></td>
+                    <td class="fw-semibold">${j.nombre} ${j.apellido}</td>
+                    <td>${getBadgePosicion(j.posicion)}</td>
+                    <td><span class="badge bg-light text-dark border">${j.nacionalidad || 'N/D'}</span></td>
+                    <td class="text-end pe-4">
+                        <button class="btn btn-outline-danger btn-sm rounded-pill px-3" onclick="desvincularJugadorDelClub('${club.id}', '${j.id}', '${j.nombre} ${j.apellido}')">
+                            <i class="bi bi-x-circle me-1"></i> Desvincular
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function abrirModalVincularJugador() {
+            const clubId = document.getElementById('select-club-plantel').value;
+            if (!clubId) return;
+
+            // Listar jugadores que no están en este club
+            const selectJ = document.getElementById('select-jugador-disponible');
+            selectJ.innerHTML = '<option value="">-- Seleccionar --</option>';
+
+            const disponibles = listaJugadores.filter(j => j.idClub !== clubId);
+            if (disponibles.length === 0) {
+                selectJ.innerHTML += '<option disabled>No hay otros jugadores disponibles</option>';
+            } else {
+                disponibles.forEach(j => {
+                    const clubActual = j.nombreClub ? ` (Actual: ${j.nombreClub})` : ' (Libre)';
+                    selectJ.innerHTML += `<option value="${j.id}">${j.nombre} ${j.apellido} - #${j.numero} ${j.posicion}${clubActual}</option>`;
+                });
+            }
+
+            modalVincularObj.show();
+        }
+
+        async function confirmarVincularJugador() {
+            const clubId = document.getElementById('select-club-plantel').value;
+            const jugadorId = document.getElementById('select-jugador-disponible').value;
+
+            if (!clubId || !jugadorId) {
+                Swal.fire('Atención', 'Debes seleccionar un jugador', 'warning');
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/clubes/${clubId}/jugadores/${jugadorId}`, {
+                    method: 'POST'
+                });
+
+                if (!res.ok) throw new Error('Error al vincular jugador al club');
+
+                modalVincularObj.hide();
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Jugador Vinculado!',
+                    text: 'El jugador ha sido agregado a la plantilla del club en MongoDB',
+                    timer: 1800,
+                    showConfirmButton: false
+                });
+
+                await recargarTodosLosDatos();
+                mostrarPlantelSeleccionado();
+            } catch (err) {
+                Swal.fire('Error', err.message, 'error');
+            }
+        }
+
+        async function desvincularJugadorDelClub(clubId, jugadorId, nombreJugador) {
+            const confirm = await Swal.fire({
+                title: `¿Desvincular a ${nombreJugador}?`,
+                text: 'El jugador dejará de pertenecer a este club y pasará a ser agente libre.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#eab308',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Sí, desvincular',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (confirm.isConfirmed) {
+                try {
+                    const res = await fetch(`/api/clubes/${clubId}/jugadores/${jugadorId}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (!res.ok) throw new Error('Error al desvincular jugador');
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Desvinculado',
+                        text: 'El jugador ha sido desvinculado con éxito',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+
+                    await recargarTodosLosDatos();
+                    mostrarPlantelSeleccionado();
+                } catch (err) {
+                    Swal.fire('Error', err.message, 'error');
+                }
+            }
+        }
+    </script>
+</body>
+</html>
