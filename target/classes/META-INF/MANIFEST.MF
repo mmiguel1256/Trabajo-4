@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-Java-Version: 25
+Java-Version: 21
 Build-Jdk-Spec: 25
 Implementation-Title: Trabajo-4
 Implementation-Version: 1
